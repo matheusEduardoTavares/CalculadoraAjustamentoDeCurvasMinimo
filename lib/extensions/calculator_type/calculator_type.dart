@@ -1,3 +1,5 @@
+import 'package:ajustamento_curva_minimo/widgets/table_calculator/table_calculator.dart';
+
 enum CalculatorType {
   leastSquareCurveFit,
 }
@@ -20,14 +22,14 @@ extension CalculatorTypeExt on CalculatorType {
 
   static final _rowDefinition = {
     CalculatorType.leastSquareCurveFit: [
-      ['Y'],
-      ['X'],
-      ['X^2 * Y'],
-      ['X^4'],
-      ['X^3'],
-      ['X^3'],
-      ['X * Y'],
-      ['Z1'],
+      RowsTable(calculate: (x, y) => y, items: ['Y']),
+      RowsTable(calculate: (x, y) => x, items: ['X']),
+      RowsTable(calculate: (x, y) => (x*x) * y, items: ['X^2 * Y']),
+      RowsTable(calculate: (x, y) => x * x * x * x, items: ['X^4']),
+      RowsTable(calculate: (x, y) => x * x * x, items: ['X^3']),
+      RowsTable(calculate: (x, y) => x * x, items: ['X^2']),
+      RowsTable(calculate: (x, y) => x * y, items: ['X * Y']),
+      RowsTable(calculate: (x, y) => 1, items: ['Z1']),
     ],
   };
 
@@ -40,7 +42,7 @@ extension CalculatorTypeExt on CalculatorType {
   }
 
   String get stringValue => _stringValue[this]!;
-  List<List<String?>> get rowDefinitionValue => _rowDefinition[this]!;
+  List<RowsTable> get rowDefinitionValue => _rowDefinition[this]!;
   ConditionTypedef get isEditable => _conditionDefinition[this]!;
   List<CalculatorType> get values => CalculatorType.values;
 }

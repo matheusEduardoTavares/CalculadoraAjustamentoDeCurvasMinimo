@@ -15,28 +15,41 @@ class TableCalculator extends StatefulWidget {
   State<TableCalculator> createState() => _TableCalculatorState();
 }
 
-class CalculateSums {
-  final double Function(double x, double y) calculate;
-  CalculateSums({
+class RowsTable {
+  RowsTable({
     required this.calculate,
-    required this.label,
+    required this.items,
   });
-  final String label;
+
+  final double Function(double x, double y) calculate;
+  List<String?> items;
+}
+
+class ColumnsTable {
+  ColumnsTable({
+    required this.rows,
+    required this.title,
+  });
+  List<RowsTable> rows;
+  final String title;
 }
 
 class _TableCalculatorState extends State<TableCalculator> {
 
   final _formKey = GlobalKey<FormState>();
 
-  List<List<String?>> _generateNewColumn({int? qtyFields}) {
-    return List.from(_rowDefinition.value.map((e) => [
-      ...e,
-      ...List.filled(qtyFields ?? 0, '', growable: true),
-    ]).toList());
+  ColumnsTable _generateNewColumn({int? qtyFields}) {
+    return ColumnsTable(
+      rows: List<RowsTable>.from(_rowDefinition.value.map((e) => RowsTable(calculate: e.calculate, items: [
+          ...e.items,
+          ...List.filled(qtyFields ?? 0, '', growable: true)
+        ])).toList()), 
+      title: 'Coluna $qtyFields',
+    );
   }
 
-  late ValueNotifier<List<List<List<String?>>>> _items;
-  late ValueNotifier<List<List<String?>>> _rowDefinition;
+  late ValueNotifier<List<ColumnsTable>> _items;
+  late ValueNotifier<List<RowsTable>> _rowDefinition;
   late ValueNotifier<String?> _result;
 
   @override
@@ -47,7 +60,7 @@ class _TableCalculatorState extends State<TableCalculator> {
 
     _rowDefinition = ValueNotifier(widget.calculatorType.value.rowDefinitionValue);
 
-    _items = ValueNotifier<List<List<List<String?>>>>([
+    _items = ValueNotifier<List<ColumnsTable>>([
       _generateNewColumn(),
     ]);
   }
@@ -55,9 +68,9 @@ class _TableCalculatorState extends State<TableCalculator> {
   List<DataRow> _getRows() {
     final rows = <DataRow>[];
 
-    for (var rowIndex = 0; rowIndex < _items.value[0].length; rowIndex++) {
+    for (var rowIndex = 0; rowIndex < _items.value[0].rows.length; rowIndex++) {
       rows.add(DataRow(
-        cells: _items.value[0][rowIndex].asMap().map(
+        cells: _items.value[0].rows[rowIndex].items.asMap().map(
           (cellIndex, numberValue) => MapEntry(
             cellIndex, 
             DataCell(
@@ -65,7 +78,7 @@ class _TableCalculatorState extends State<TableCalculator> {
                 isEditable: widget.calculatorType.value.isEditable(
                   ValidEditValueViewModel(rowIndex: rowIndex, cellIndex: cellIndex)
                 ),
-                onChanged: (newValue) => _items.value[0][rowIndex][cellIndex] = newValue,
+                onChanged: (newValue) => _items.value[0].rows[rowIndex].items[cellIndex] = newValue,
                 value: numberValue,
               ),
             )
@@ -78,9 +91,9 @@ class _TableCalculatorState extends State<TableCalculator> {
   }
 
   double _getSumRow(int index) {
-    final row = _items.value[0][index];
+    final row = _items.value[0].rows[index];
     print(row);
-    final numbers = row.map((e) => double.tryParse(e!));
+    final numbers = row.items.map((e) => double.tryParse(e!));
     print(numbers);
     final sum = numbers.fold<double>(0, (accumulator, currentValue) => accumulator + (currentValue ?? 0.0));
     print(sum);
@@ -89,20 +102,22 @@ class _TableCalculatorState extends State<TableCalculator> {
   }
 
   void _completeTable() {
-    // final newList = List<List<List<String?>>>.from(_items.value);
+    final newList = List<ColumnsTable>.from(_items.value);
             
-    // for (var i = 0; i < _items.value.length; i++) {
-    //   for (var j = 0; j < _items.value[i].length; j++) {
-    //     final cellItems = List<String?>.from(_items.value[i][j]);
-    //     for (var k = 0; k < _items.value[i][j].length; k++) {
-    //       cellItems[k] = (cellItems[k]?.isEmpty ?? true) ?  : cellItems[k];
-    //     }
+    for (var i = 0; i < _items.value.length; i++) {
+      for (var j = 0; j < _items.value[i].rows.length; j++) {
+        final cellItems = List<String?>.from(_items.value[i].rows[j].items);
+        for (var k = 0; k < cellItems.length; k++) {
+          final yValue = double.tryParse(_items.value[i].rows[0].items[k] ?? '') ?? 0.0;
+          final xValue = double.tryParse(_items.value[i].rows[1].items[k] ?? '') ?? 0.0;
+          cellItems[k] = (cellItems[k]?.isEmpty ?? true) ? _items.value[i].rows[j].calculate(xValue, yValue).toString() : cellItems[k];
+        }
         
-    //     newList[i][j] = cellItems;
-    //   }
-    // }
+        newList[i].rows[j].items = cellItems;
+      }
+    }
 
-    // _items.value = newList..add(_generateNewColumn(qtyFields: _items.value.length));
+    _items.value = newList;
   }
 
   @override
@@ -128,14 +143,14 @@ class _TableCalculatorState extends State<TableCalculator> {
                                 child: ElevatedButton(
                                   child: const Text('Adicionar coluna'),
                                   onPressed: () {
-                                    final newList = List<List<List<String?>>>.from(_items.value);
+                                    final newList = List<ColumnsTable>.from(_items.value);
             
                                     for (var i = 0; i < _items.value.length; i++) {
-                                      for (var j = 0; j < _items.value[i].length; j++) {
-                                        final cellItems = List<String?>.from(_items.value[i][j]);
+                                      for (var j = 0; j < _items.value[i].rows.length; j++) {
+                                        final cellItems = List<String?>.from(_items.value[i].rows[j].items);
                                         cellItems.add('');
                                         
-                                        newList[i][j] = cellItems;
+                                        newList[i].rows[j].items = cellItems;
                                       }
                                     }
             
@@ -157,14 +172,14 @@ class _TableCalculatorState extends State<TableCalculator> {
                                         ),
                                         onSort: (index, __) {
                                           if (index > 0) {
-                                            final newList = List<List<List<String?>>>.from(_items.value);
+                                            final newList = List<ColumnsTable>.from(_items.value);
             
                                             for (var i = 0; i < _items.value.length; i++) {
-                                              for (var j = 0; j < _items.value[i].length; j++) {
-                                                final cellItems = List<String?>.from(_items.value[i][j]);
+                                              for (var j = 0; j < _items.value[i].rows.length; j++) {
+                                                final cellItems = List<String?>.from(_items.value[i].rows[j].items);
                                                 cellItems.removeAt(index);
                                                 
-                                                newList[i][j] = cellItems;
+                                                newList[i].rows[j].items = cellItems;
                                               }
                                             }
             
@@ -190,7 +205,31 @@ class _TableCalculatorState extends State<TableCalculator> {
                               final sumX = _getSumRow(1);
                               print('sumX = $sumX');
 
-                              // final 
+                              _completeTable();
+
+                              final sumXSquareMultiplyY = _getSumRow(2);
+                              print('sumXSquareMultiplyY = $sumXSquareMultiplyY');
+
+                              final sumXElevate4 = _getSumRow(3);
+                              print('sumXElevate4 = $sumXElevate4');
+
+                              final sumXElevate3 = _getSumRow(4);
+                              print('sumXElevate3 = $sumXElevate3');
+
+                              final sumXElevate2 = _getSumRow(5);
+                              print('sumXElevate2 = $sumXElevate2');
+
+                              final sumXMultiplyY = _getSumRow(6);
+                              print('sumXMultiplyY = $sumXMultiplyY');
+
+                              final sumZ = _getSumRow(7);
+                              print('sumZ = $sumZ');
+
+                              final matrix = [
+                                [sumXElevate4, sumXElevate3, sumXElevate2, sumXSquareMultiplyY],
+                                [sumXElevate3, sumXElevate2, sumX, sumXMultiplyY],
+                                [sumXElevate2, sumX, sumZ, sumY],
+                              ];
 
                             }
                           }, 
