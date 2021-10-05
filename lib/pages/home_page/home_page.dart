@@ -1,25 +1,25 @@
+import 'package:ajustamento_curva_minimo/extensions/calculator_type/calculator_type.dart';
 import 'package:ajustamento_curva_minimo/widgets/table_calculator/table_calculator.dart';
 import 'package:flutter/material.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({
     Key? key,
   }) : super(key: key);
 
-  static final a11 = ValueNotifier<int>(0);
-  static final a12 = ValueNotifier<int>(0);
-  static final a13 = ValueNotifier<int>(0);
-  static final a21 = ValueNotifier<int>(0);
-  static final a22 = ValueNotifier<int>(0);
-  static final a23 = ValueNotifier<int>(0);
-  static final a31 = ValueNotifier<int>(0);
-  static final a32 = ValueNotifier<int>(0);
-  static final a33 = ValueNotifier<int>(0);
-  static final sum = ValueNotifier<int?>(null);
-  static final is3x3 = ValueNotifier<bool>(false);
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
 
-  String get _qty => is3x3.value ? '3x3' : '2x2';
-  static String get invertedQty => is3x3.value ? '2x2' : '3x3';
+class _HomePageState extends State<HomePage> {
+  late ValueNotifier<CalculatorType> _calculatorType;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _calculatorType = ValueNotifier(CalculatorType.leastSquareCurveFit);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,26 +27,21 @@ class HomePage extends StatelessWidget {
       appBar: AppBar(
         centerTitle: true,
         title: ValueListenableBuilder(
-          valueListenable: is3x3,
-          builder: (_, __, ___) => Text('Calcular determinante $_qty'),
+          valueListenable: _calculatorType,
+          builder: (_, __, ___) => FittedBox(child: Text(_calculatorType.value.stringValue)),
         ),
         actions: [
-          TextButton(
-            child: ValueListenableBuilder(
-                valueListenable: is3x3,
-                builder: (_, __, ___) => Text(
-                invertedQty,
-                style: const TextStyle(color: Colors.white),
-              ),
+          ValueListenableBuilder(
+            valueListenable: _calculatorType,
+            builder: (_, __, ___) => PopupMenuButton(
+              itemBuilder: (_) => _calculatorType.value.values.map((e) => PopupMenuItem(child: Text(e.stringValue))).toList(),
             ),
-            onPressed: () {
-              is3x3.value = !is3x3.value;
-              sum.value = null;
-            },
-          ),
+          )
         ],
       ),
-      body: TableCalculator(),
+      body: TableCalculator(
+        calculatorType: _calculatorType,
+      ),
     );
   }
 }
