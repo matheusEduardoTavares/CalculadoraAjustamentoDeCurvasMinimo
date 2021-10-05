@@ -1,3 +1,4 @@
+import 'package:equations/equations.dart';
 import 'package:flutter/material.dart';
 
 import 'package:ajustamento_curva_minimo/extensions/calculator_type/calculator_type.dart';
@@ -225,11 +226,40 @@ class _TableCalculatorState extends State<TableCalculator> {
                               final sumZ = _getSumRow(7);
                               print('sumZ = $sumZ');
 
-                              final matrix = [
-                                [sumXElevate4, sumXElevate3, sumXElevate2, sumXSquareMultiplyY],
-                                [sumXElevate3, sumXElevate2, sumX, sumXMultiplyY],
-                                [sumXElevate2, sumX, sumZ, sumY],
+                              // final matrix = [
+                              //   [sumXElevate4, sumXElevate3, sumXElevate2, sumXSquareMultiplyY],
+                              //   [sumXElevate3, sumXElevate2, sumX, sumXMultiplyY],
+                              //   [sumXElevate2, sumX, sumZ, sumY],
+                              // ];
+                              final matrixEquations = [
+                                sumXElevate4, sumXElevate3, sumXElevate2, sumXElevate3, sumXElevate2, sumX, sumXElevate2, sumX, sumZ,
                               ];
+
+                              final matrixResults = [
+                                sumXSquareMultiplyY, sumXMultiplyY, sumY,
+                              ];
+
+                              final formule = GaussianElimination.flatMatrix(
+                                equations: matrixEquations,
+                                constants: matrixResults,
+                              );
+
+                              if (formule.hasSolution()) {
+                                final result = formule.solve();
+                                final a = result[0];
+                                final b = result[1];
+                                final c = result[2];
+                                final stringResult = 'Equação = F(X) = ${a}x² + ${b}x + $c';
+                                _result.value = stringResult;
+                              }
+                              else {
+                                showDialog(context: context, builder: (_) => AlertDialog(
+                                  title: const Text('Equação sem solução'),
+                                  actions: [
+                                    TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancelar'))
+                                  ],
+                                ));
+                              }
 
                             }
                           }, 
