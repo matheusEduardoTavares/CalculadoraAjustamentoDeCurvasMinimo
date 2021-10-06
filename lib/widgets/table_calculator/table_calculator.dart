@@ -139,6 +139,44 @@ class _TableCalculatorState extends State<TableCalculator> {
                           scrollDirection: Axis.horizontal,
                           child: Column(
                             children: [
+                              // Padding(
+                              //   padding: const EdgeInsets.only(bottom: 10.0),
+                              //   child: ElevatedButton(
+                              //     child: const Text('Preencher com o exercício'),
+                              //     onPressed: () {
+                              //       final newList = List<ColumnsTable>.from(_items.value);
+
+                              //       for (var x = 1; x < 9; x++) {
+                              //         newList.add(_generateNewColumn(qtyFields: x));
+                              //       }
+
+                              //       final xValues = [
+                              //         29.5, 33.5, 37.0, 39.8, 43.4, 47.2, 49.5, 54.4, 58.6
+                              //       ].map((e) => e.toString()).toList();
+
+                              //       final yValues = [
+                              //         85, 86, 87, 88, 89, 90, 91, 92, 93
+                              //       ].map((e) => e.toString()).toList();
+            
+                              //       newList[0].rows[0].items = yValues;
+                              //       newList[0].rows[1].items = xValues;
+
+                              //       for (var i = 1; i < _items.value.length; i++) {
+                              //         for (var j = 0; j < _items.value[i].rows.length; j++) {
+                              //           final cellItems = List<String?>.from(_items.value[i].rows[j].items);
+                              //           final newItems = [
+                              //             ...cellItems,
+                              //             ...List.filled(10 - cellItems.length, '')
+                              //           ];
+                                        
+                              //           newList[i].rows[j].items = newItems;
+                              //         }
+                              //       }
+            
+                              //       _items.value = newList;
+                              //     },
+                              //   ),
+                              // ),
                               Padding(
                                 padding: const EdgeInsets.only(bottom: 10.0),
                                 child: ElevatedButton(
@@ -200,31 +238,32 @@ class _TableCalculatorState extends State<TableCalculator> {
                         ElevatedButton(
                           onPressed: () {
                             if (_formKey.currentState!.validate()) {
+                              var finalResult = '';
                               final sumY = _getSumRow(0);
-                              print('sumY = $sumY');
+                              finalResult += 'Somatório de Y = $sumY\n';
 
                               final sumX = _getSumRow(1);
-                              print('sumX = $sumX');
+                              finalResult += 'Somatório de X = $sumX\n';
 
                               _completeTable();
 
                               final sumXSquareMultiplyY = _getSumRow(2);
-                              print('sumXSquareMultiplyY = $sumXSquareMultiplyY');
+                              finalResult += 'Somatório de X^2 * Y = $sumXSquareMultiplyY\n';
 
                               final sumXElevate4 = _getSumRow(3);
-                              print('sumXElevate4 = $sumXElevate4');
+                              finalResult += 'Somatório de X^4 = $sumXElevate4\n';
 
                               final sumXElevate3 = _getSumRow(4);
-                              print('sumXElevate3 = $sumXElevate3');
+                              finalResult += 'Somatório de X^3 = $sumXElevate3\n';
 
                               final sumXElevate2 = _getSumRow(5);
-                              print('sumXElevate2 = $sumXElevate2');
+                              finalResult += 'Somatório de X^2 = $sumXElevate2\n';
 
                               final sumXMultiplyY = _getSumRow(6);
-                              print('sumXMultiplyY = $sumXMultiplyY');
+                              finalResult += 'Somatório de X * Y = $sumXMultiplyY\n';
 
                               final sumZ = _getSumRow(7);
-                              print('sumZ = $sumZ');
+                              finalResult += 'Somatório de Z = $sumZ\n';
 
                               // final matrix = [
                               //   [sumXElevate4, sumXElevate3, sumXElevate2, sumXSquareMultiplyY],
@@ -249,8 +288,8 @@ class _TableCalculatorState extends State<TableCalculator> {
                                 final a = result[0];
                                 final b = result[1];
                                 final c = result[2];
-                                final stringResult = 'Equação = F(X) = ${a}x² + ${b}x + $c';
-                                _result.value = stringResult;
+                                finalResult += 'Equação = F(X) = ${a}x² + ${b}x + $c';
+                                _result.value = finalResult;
                               }
                               else {
                                 showDialog(context: context, builder: (_) => AlertDialog(
