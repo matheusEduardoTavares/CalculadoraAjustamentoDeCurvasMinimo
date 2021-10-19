@@ -66,6 +66,23 @@ class _TableCalculatorState extends State<TableCalculator> {
     ]);
   }
 
+  @override
+  void didUpdateWidget(TableCalculator oldWidget) {
+    if (oldWidget.calculatorType.value != widget.calculatorType.value) {
+      setState(() {
+        _result = ValueNotifier(null);
+
+        _rowDefinition = ValueNotifier(widget.calculatorType.value.rowDefinitionValue);
+
+        _items = ValueNotifier<List<ColumnsTable>>([
+          _generateNewColumn(),
+        ]);
+      });
+    }
+
+    super.didUpdateWidget(oldWidget);
+  }
+
   List<DataRow> _getRows() {
     final rows = <DataRow>[];
 
@@ -111,7 +128,9 @@ class _TableCalculatorState extends State<TableCalculator> {
         for (var k = 0; k < cellItems.length; k++) {
           final yValue = double.tryParse(_items.value[i].rows[0].items[k] ?? '') ?? 0.0;
           final xValue = double.tryParse(_items.value[i].rows[1].items[k] ?? '') ?? 0.0;
-          cellItems[k] = (cellItems[k]?.isEmpty ?? true) ? _items.value[i].rows[j].calculate(xValue, yValue).toString() : cellItems[k];
+          cellItems[k] = (cellItems[k]?.isEmpty ?? true) ? 
+            _items.value[i].rows[j].calculate(xValue, yValue).toString() : 
+            (j > 1 && k != 0 ? _items.value[i].rows[j].calculate(xValue, yValue).toString() : cellItems[k]);
         }
         
         newList[i].rows[j].items = cellItems;
@@ -238,68 +257,117 @@ class _TableCalculatorState extends State<TableCalculator> {
                         ElevatedButton(
                           onPressed: () {
                             if (_formKey.currentState!.validate()) {
-                              var finalResult = '';
-                              final sumY = _getSumRow(0);
-                              finalResult += 'Somatório de Y = $sumY\n';
+                              if (widget.calculatorType.value == CalculatorType.leastSquareCurveFit) {
+                                var finalResult = '';
+                                final sumY = _getSumRow(0);
+                                finalResult += 'Somatório de Y = $sumY\n';
 
-                              final sumX = _getSumRow(1);
-                              finalResult += 'Somatório de X = $sumX\n';
+                                final sumX = _getSumRow(1);
+                                finalResult += 'Somatório de X = $sumX\n';
 
-                              _completeTable();
+                                _completeTable();
 
-                              final sumXSquareMultiplyY = _getSumRow(2);
-                              finalResult += 'Somatório de X^2 * Y = $sumXSquareMultiplyY\n';
+                                final sumXSquareMultiplyY = _getSumRow(2);
+                                finalResult += 'Somatório de X^2 * Y = $sumXSquareMultiplyY\n';
 
-                              final sumXElevate4 = _getSumRow(3);
-                              finalResult += 'Somatório de X^4 = $sumXElevate4\n';
+                                final sumXElevate4 = _getSumRow(3);
+                                finalResult += 'Somatório de X^4 = $sumXElevate4\n';
 
-                              final sumXElevate3 = _getSumRow(4);
-                              finalResult += 'Somatório de X^3 = $sumXElevate3\n';
+                                final sumXElevate3 = _getSumRow(4);
+                                finalResult += 'Somatório de X^3 = $sumXElevate3\n';
 
-                              final sumXElevate2 = _getSumRow(5);
-                              finalResult += 'Somatório de X^2 = $sumXElevate2\n';
+                                final sumXElevate2 = _getSumRow(5);
+                                finalResult += 'Somatório de X^2 = $sumXElevate2\n';
 
-                              final sumXMultiplyY = _getSumRow(6);
-                              finalResult += 'Somatório de X * Y = $sumXMultiplyY\n';
+                                final sumXMultiplyY = _getSumRow(6);
+                                finalResult += 'Somatório de X * Y = $sumXMultiplyY\n';
 
-                              final sumZ = _getSumRow(7);
-                              finalResult += 'Somatório de Z = $sumZ\n';
+                                final sumZ = _getSumRow(7);
+                                finalResult += 'Somatório de Z = $sumZ\n';
 
-                              // final matrix = [
-                              //   [sumXElevate4, sumXElevate3, sumXElevate2, sumXSquareMultiplyY],
-                              //   [sumXElevate3, sumXElevate2, sumX, sumXMultiplyY],
-                              //   [sumXElevate2, sumX, sumZ, sumY],
-                              // ];
-                              final matrixEquations = [
-                                sumXElevate4, sumXElevate3, sumXElevate2, sumXElevate3, sumXElevate2, sumX, sumXElevate2, sumX, sumZ,
-                              ];
+                                // final matrix = [
+                                //   [sumXElevate4, sumXElevate3, sumXElevate2, sumXSquareMultiplyY],
+                                //   [sumXElevate3, sumXElevate2, sumX, sumXMultiplyY],
+                                //   [sumXElevate2, sumX, sumZ, sumY],
+                                // ];
+                                final matrixEquations = [
+                                  sumXElevate4, sumXElevate3, sumXElevate2, sumXElevate3, sumXElevate2, sumX, sumXElevate2, sumX, sumZ,
+                                ];
 
-                              final matrixResults = [
-                                sumXSquareMultiplyY, sumXMultiplyY, sumY,
-                              ];
+                                final matrixResults = [
+                                  sumXSquareMultiplyY, sumXMultiplyY, sumY,
+                                ];
 
-                              final formule = GaussianElimination.flatMatrix(
-                                equations: matrixEquations,
-                                constants: matrixResults,
-                              );
+                                final formule = GaussianElimination.flatMatrix(
+                                  equations: matrixEquations,
+                                  constants: matrixResults,
+                                );
 
-                              if (formule.hasSolution()) {
-                                final result = formule.solve();
-                                final a = result[0];
-                                final b = result[1];
-                                final c = result[2];
-                                finalResult += 'Equação = F(X) = ${a}x² + ${b}x + $c';
-                                _result.value = finalResult;
+                                if (formule.hasSolution()) {
+                                  final result = formule.solve();
+                                  final a = result[0];
+                                  final b = result[1];
+                                  final c = result[2];
+                                  finalResult += 'Equação = F(X) = ${a}x² + ${b}x + $c';
+                                  _result.value = finalResult;
+                                }
+                                else {
+                                  showDialog(context: context, builder: (_) => AlertDialog(
+                                    title: const Text('Equação sem solução'),
+                                    actions: [
+                                      TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancelar'))
+                                    ],
+                                  ));
+                                }
                               }
                               else {
-                                showDialog(context: context, builder: (_) => AlertDialog(
-                                  title: const Text('Equação sem solução'),
-                                  actions: [
-                                    TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancelar'))
-                                  ],
-                                ));
-                              }
+                                var finalResult = '';
+                                final sumY = _getSumRow(0);
+                                finalResult += 'Somatório de Y = $sumY\n';
 
+                                final sumX = _getSumRow(1);
+                                finalResult += 'Somatório de X = $sumX\n';
+
+                                _completeTable();
+
+                                final sumXMultiplyY = _getSumRow(2);
+                                finalResult += 'Somatório de X * Y = $sumXMultiplyY\n';
+
+                                final sumXElevate2 = _getSumRow(3);
+                                finalResult += 'Somatório de X^2 = $sumXElevate2\n';
+
+                                final sumZ = _getSumRow(4);
+                                finalResult += 'Somatório de Z = $sumZ\n';
+
+                                final matrixEquations = [
+                                  sumXElevate2, sumX, sumX, sumZ, 
+                                ];
+
+                                final matrixResults = [
+                                  sumXMultiplyY, sumY
+                                ];
+
+                                final formule = GaussianElimination.flatMatrix(
+                                  equations: matrixEquations,
+                                  constants: matrixResults,
+                                );
+
+                                if (formule.hasSolution()) {
+                                  final result = formule.solve();
+                                  final a = result[0];
+                                  final b = result[1];
+                                  finalResult += 'Equação = F(X) = ${a}x + $b';
+                                  _result.value = finalResult;
+                                }
+                                else {
+                                  showDialog(context: context, builder: (_) => AlertDialog(
+                                    title: const Text('Equação sem solução'),
+                                    actions: [
+                                      TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancelar'))
+                                    ],
+                                  ));
+                                }
+                              }
                             }
                           }, 
                           child: const Text('Calcular')

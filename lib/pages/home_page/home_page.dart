@@ -18,7 +18,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
 
-    _calculatorType = ValueNotifier(CalculatorType.leastSquareCurveFit);
+    _calculatorType = ValueNotifier(CalculatorType.linearMinimumCurveFit);
   }
 
   @override
@@ -31,16 +31,30 @@ class _HomePageState extends State<HomePage> {
           builder: (_, __, ___) => FittedBox(child: Text(_calculatorType.value.stringValue)),
         ),
         actions: [
-          ValueListenableBuilder(
-            valueListenable: _calculatorType,
-            builder: (_, __, ___) => PopupMenuButton(
-              itemBuilder: (_) => _calculatorType.value.values.map((e) => PopupMenuItem(child: Text(e.stringValue))).toList(),
-            ),
-          )
+          IconButton(
+            onPressed: () {
+              setState(() {
+                CalculatorType calculatorType;
+
+                if (_calculatorType.value == CalculatorType.leastSquareCurveFit) {
+                  calculatorType = CalculatorType.linearMinimumCurveFit;
+                }
+                else {
+                  calculatorType = CalculatorType.leastSquareCurveFit;
+                }
+
+                _calculatorType = ValueNotifier(calculatorType);
+              });
+            }, 
+            icon: const Icon(Icons.change_circle),
+          ),
         ],
       ),
-      body: TableCalculator(
-        calculatorType: _calculatorType,
+      body: ValueListenableBuilder(
+        valueListenable: _calculatorType,
+        builder: (_, __, ___) => TableCalculator(
+          calculatorType: _calculatorType,
+        ),
       ),
     );
   }
