@@ -37,6 +37,10 @@ class ColumnCell extends StatelessWidget {
         },
         validator: _validateDouble,
         textInputAction: TextInputAction.next,
+        keyboardType: const TextInputType.numberWithOptions(
+          decimal: true,
+          signed: true,
+        ),
       ) : Text(value?? ''),
     );
   }
